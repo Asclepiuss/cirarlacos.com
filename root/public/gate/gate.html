@@ -4,7 +4,7 @@
  <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Criar Laços, Portão</title>
-<link rel="stylesheet" href="/css/universal.css">
+<link rel="stylesheet" href="../assets/css/login.css">
 </head>
 
 <body>
@@ -16,8 +16,8 @@
             </div>
 
             <div class="header-logo">
-                <a href="index.html">
-                    <img src="images/sitemainlogo.png" alt="site main logo">
+                <a href="../index.html">
+                    <img src="../assets/images/sitemainlogo.png" alt="site main logo">
                 </a>
             </div>
                 
@@ -25,11 +25,11 @@
                     <ul class="nav-list">
 
                         <li class="nav-item">
-                          <a href="sobre.html">Sobre</a>
+                          <a href="../sobre.html">Sobre</a>
                         </li>
 
                         <li class="nav-item">
-                          <a href="contato.html">Contato</a>
+                          <a href="../contato.html">Contato</a>
                         </li>
 
                         <li class="nav-item dropdown">
@@ -44,8 +44,8 @@
                         <li class="nav-item dropdown">
                             <a href="#" class="dropdown-toggle">Área do cliente ▾</a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="cliente/clientes.html">Clientes</a></li>
-                                    <li><a href="cliente/atividades.html">Atividades</a></li>
+                                    <li><a href="/root/public/cliente/clientes.html">Clientes</a></li>
+                                    <li><a href="/root/public/cliente/atividades.html">Atividades</a></li>
                                 </ul>
                         </li>
                     </ul>
@@ -54,6 +54,46 @@
     </header>
 
     <main>
+        <div class="content-wrapper">
+            <h1>Login</h1>
+
+            <label>Email</label>
+            <input id="email" type="email">
+
+            <label>Senha</label>
+            <input id="password" type="password">
+
+            <button onclick="login()">Entrar</button>
+
+            <p id="msg"></p>
+        </div>
+
+        <script>
+            async function login() {
+            const email = document.querySelector("#email").value;
+            const password = document.querySelector("#password").value;
+
+            const res = await fetch("http://localhost:3000/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+                if (data.success) {
+                localStorage.setItem("token", data.token);
+
+                if (data.role === "admin") {
+                    window.location.href = "/root/public/cliente/admin_dashboard.html";
+                } else {
+                    window.location.href = "/root/public/cliente/atividades.html";
+                }
+                } else {
+                    document.querySelector("#msg").innerHTML = data.error;
+                    }
+                }
+</script>
     </main>
 
     <footer>
