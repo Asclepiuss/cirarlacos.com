@@ -68,33 +68,12 @@
             <p id="msg"></p>
         </div>
 
-        <script>
-            async function login() {
-            const email = document.querySelector("#email").value;
-            const password = document.querySelector("#password").value;
-
-            const res = await fetch("http://localhost:3000/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await res.json();
-
-                if (data.success) {
-                localStorage.setItem("token", data.token);
-
-                if (data.role === "admin") {
-                    window.location.href = "/root/public/cliente/admin_dashboard.html";
-                } else {
-                    window.location.href = "/root/public/cliente/atividades.html";
-                }
-                } else {
-                    document.querySelector("#msg").innerHTML = data.error;
-                    }
-                }
-</script>
+        
     </main>
+
+    <script>
+
+    </script>
 
     <footer>
         <p>Placeholder</p>  

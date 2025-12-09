@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo</title>
+    <style>
+        body {
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        header {
+            background: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0 15px 0;
+        }
+
+        button {
+            padding: 10px 16px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .item-box {
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        small {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<header>Painel Administrativo</header>
+<div class="container">
+
+    <!-- ACTIVITIES MANAGEMENT -->
+    <section>
+        <h2>Gerenciar Atividades</h2>
+
+        <h3>Criar nova atividade</h3>
+        <form id="activityForm" enctype="multipart/form-data">
+            <input type="text" name="title" placeholder="Título" required>
+            <textarea name="content" placeholder="Descrição" required></textarea>
+            <label>Anexo (opcional):</label>
+            <input type="file" name="attachment">
+
+            <button type="submit">Criar Atividade</button>
+        </form>
+
+        <h3>Lista de Atividades</h3>
+        <div id="activitiesList"></div>
+    </section>
+
+    <!-- USER MANAGEMENT -->
+    <section>
+        <h2>Gerenciar Usuários</h2>
+
+        <h3>Contas cadastradas</h3>
+        <div id="usersList"></div>
+    </section>
+
+</div>
+
+<script>
+    const API = "http://localhost:3000/api";
+
+    /* -------------------------------
+       FETCH ACTIVITIES
+    -------------------------------- */
+    async function loadActivities() {
+        const res = await fetch(`${API}/activities`);
+        const list = await res.json();
+
+        const container = document.getElementById("activitiesList");
+        container.innerHTML = "";
+
+        list.forEach(a => {
+            const box = document.createElement("div");
+            box.className = "item-box";
+
+            box.innerHTML = `
+                <strong>${a.title}</strong><br>
+                <small>${new Date(a.created_at).toLocaleString()}</small><br><br>
+                ${a.content}<br><br>
+                ${a.attachment ? `<a href="/uploads/${a.attachment}" download>Baixar Anexo</a><br><br>` : ""}
+                
+                <button onclick="deleteActivity(${a.id})">Excluir</button>
+                <button onclick="editActivityPrompt(${a.id}, '${a.title}', \`${a.content}\`)">Editar</button>
+            `;
+
+            container.appendChild(box);
+        });
+    }
+
+    async function deleteActivity(id) {
+        if (!confirm("Excluir esta atividade?")) return;
+
+        await fetch(`${API}/activities/${id}`, { method: "DELETE" });
+        loadActivities();
+    }
+
+    async function editActivityPrompt(id, oldTitle, oldContent) {
+        const newTitle = prompt("Novo título:", oldTitle);
+        if (!newTitle) return;
+
+        const newContent = prompt("Nova descrição:", oldContent);
+        if (!newContent) return;
+
+        await fetch(`${API}/activities/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: newTitle, content: newContent })
+        });
+
+        loadActivities();
+    }
+
+    /* CREATE NEW ACTIVITY */
+    document.getElementById("activityForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = new FormData(e.target);
+
+        await fetch(`${API}/activities`, {
+            method: "POST",
+            body: form
+        });
+
+        e.target.reset();
+        loadActivities();
+        alert("Atividade criada com sucesso!");
+    });
+
+
+    /* -------------------------------
+       MANAGE USERS
+    -------------------------------- */
+    async function loadUsers() {
+        const res = await fetch(`${API}/users`);
+        const users = await res.json();
+
+        const container = document.getElementById("usersList");
+        container.innerHTML = "";
+
+        users.forEach(u => {
+            const box = document.createElement("div");
+            box.className = "item-box";
+
+            box.innerHTML = `
+                <strong>${u.username}</strong> (${u.email})<br>
+                <small>Função atual: ${u.role}</small><br><br>
+
+                <button onclick="editUserRole('${u.id}', '${u.role}')">Alterar função</button>
+                <button onclick="deleteUser('${u.id}')">Excluir usuário</button>
+            `;
+
+            container.appendChild(box);
+        });
+    }
+
+    async function editUserRole(id, currentRole) {
+        const newRole = prompt("Nova função (user/admin):", currentRole);
+        if (!newRole) return;
+
+        await fetch(`${API}/users/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: newRole })
+        });
+
+        loadUsers();
+    }
+
+    async function deleteUser(id) {
+        if (!confirm("Excluir este usuário?")) return;
+
+        await fetch(`${API}/users/${id}`, { method: "DELETE" });
+        loadUsers();
+    }
+
+    // LOAD EVERYTHING ON PAGE LOAD
+    loadActivities();
+    loadUsers();
+
+</script>
+
+</body>
+</html>
